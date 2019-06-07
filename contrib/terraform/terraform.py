@@ -189,6 +189,40 @@ def packet_device(resource, tfvars=None):
     return name, attrs, groups
 
 
+@parses('scaleway_server')
+def scaleway_server(resource, tfvars=None):
+    raw_attrs = resource['primary']['attributes']
+    name = raw_attrs['name']
+    groups = []
+
+    attrs = {
+        'id': raw_attrs['id'],
+        'name': raw_attrs['name'],
+        'image': raw_attrs['image'],
+        'tags': parse_list(raw_attrs, 'tags'),
+        'type': raw_attrs['type'],
+        'state': raw_attrs['state'],
+        # ansible
+        'ansible_ssh_host': raw_attrs['public_ip'],
+        'ansible_ssh_user': 'root',  # it's always "root" on Scaleway
+        # generic
+        'public_ip': raw_attrs['public_ip'],
+        'private_ip': raw_attrs['private_ip'],
+        'provider': 'scaleway',
+    }
+
+    # add groups based on attrs
+    # groups.append('packet_operating_system=' + attrs['operating_system'])
+    # groups.append('packet_locked=%s' % attrs['locked'])
+    # groups.append('packet_state=' + attrs['state'])
+    # groups.append('packet_plan=' + attrs['plan'])
+
+    # groups specific to kubespray
+    groups = groups + attrs['tags']
+
+    return name, attrs, groups
+
+
 def openstack_floating_ips(resource):
     raw_attrs = resource['primary']['attributes']
     attrs = {
